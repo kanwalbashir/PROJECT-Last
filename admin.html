@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Taste Haven</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="shortcut icon" href="../img/12.png" type="image/x-icon">
+</head>
+<body>
+<header>
+    <a href="#" class="logo"><i class="fas fa-utensils"></i>Admin Panel</a>
+    <nav class="navbar">
+        <a href="admin.html">Dashboard</a>
+        <a href="admin-menu.html"> Dishes</a>
+        <a href="admin-orders.html">Orders</a>
+        <a href="admin-reservations.html">Reservations</a>
+        <a href="admin-users.html">Users</a>
+        <a href="admin-messages.html">Messages</a>
+        <a href="admin-recipies.html">Recipies</a>
+    </nav>
+    <div class="icons">
+        <i class="fas fa-bars" id="menu-bars"></i>
+        <a href="#" id="logoutBtn" class="fas fa-sign-out-alt"></a>
+    </div>
+</header>
+<section class="home1" id="home1">
+    <div class="slide">
+        <div class="content">
+            <h1>Welcome Admin</h1>
+            <p>Here you can manage all dishes, orders,recipes, reservations, and customer interactions.</p>
+        </div>
+    </div>
+</section>
+<section class="dishes" id="admin-dashboard">
+    <h3 class="subheading">Overview</h3>
+    <h1 class="heading">Quick Stats</h1>
+    <div class="box-container">
+        <div class="box">
+            <i class="fas fa-hamburger fa-3x"></i>
+            <h3>Total Categories</h3>
+            <span id="totalCategories">0</span>
+        </div>
+        <div class="box">
+            <i class="fas fa-shopping-bag fa-3x"></i>
+            <h3>Bookings</h3>
+            <span id="totalBookings">0</span>
+        </div>
+        <div class="box">
+            <i class="fas fa-users fa-3x"></i>
+            <h3>Users</h3>
+            <span id="totalUsers">0</span>
+        </div>
+        <div class="box">
+            <i class="fas fa-utensils fa-3x"></i>
+            <h3>Recipes</h3>
+            <span id="totalRecipes">0</span>
+        </div>
+        <div class="box">
+            <i class="fas fa-envelope fa-3x"></i>
+            <h3>Messages</h3>
+            <span id="totalContacts">0</span>
+        </div>
+    </div>
+</section>
+<section class="contact" id="contact">
+    <div class="content1">
+        <h3 class="subheading">Message All Users</h3>
+        <h1 class="heading">Send Announcement</h1>
+        <form id="announcementForm">
+            <textarea id="announcementMessage" placeholder="Your message..." required></textarea>
+            <input type="submit" value="Send" class="btn largebtn">
+        </form>
+    </div>
+</section>
+<form id="addChefForm" enctype="multipart/form-data">
+    <h3>Add New Chef (Max 4)</h3>
+    <input type="text" id="chefName" name="name" placeholder="Name" required>
+    <input type="file" id="chefImage" name="image" accept="image/*" required>
+    <textarea id="chefDesc" name="description" placeholder="Description" required></textarea>
+    <button type="submit"class="btn">Add Chef</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="chefTableBody"></tbody>
+</table>
+<h2>Upload New Gallery Image</h2>
+<form id="uploadGalleryForm" enctype="multipart/form-data">
+    <input type="file" id="galleryImage" name="image" accept="image/*" required />
+    <button type="submit">Upload</button>
+</form>
+
+<div id="adminGallery"></div>
+<footer class="footer">
+    <div class="credit">Admin Panel  2025 - <span>Taste Haven</span></div>
+</footer>
+<script>
+    async function loadAnnouncement() {
+        try {
+            const res = await fetch("http://localhost:8080/api/announcement");
+            const data = await res.json();
+            if (data && data.message) {
+                document.getElementById("announcementText").textContent = data.message;
+                document.getElementById("announcementBar").style.display = "block";
+            }
+        } catch (err) {
+            console.error("Error loading announcement:", err);
+        }
+    }
+    // Send announcement
+    document.getElementById("announcementForm").addEventListener("submit", async (e) => {
+        e.preventDefault(); // prevent reload
+        const message = document.getElementById("announcementMessage").value;
+
+        try {
+            const res = await fetch("http://localhost:8080/api/announcement", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await res.json();
+
+            document.getElementById("responseMsg").style.display = "block";
+            document.getElementById("responseMsg").innerText = "Announcement sent successfully!";
+            loadAnnouncement();
+        } catch (err) {
+            console.error("Error sending announcement:", err);
+            document.getElementById("responseMsg").style.display = "block";
+            document.getElementById("responseMsg").innerText = "Failed to send announcement";
+        }
+    });
+
+    function closeAnnouncement() {
+        document.getElementById("announcementBar").style.display = "none";
+    }
+    //for deshboard
+     async function loadDashboardStats() {
+            try {
+                const response = await fetch("http://localhost:8080/api/announcement/stats");
+                const data = await response.json();
+
+                document.getElementById("totalCategories").textContent = data.totalCategories;
+                document.getElementById("totalBookings").textContent = data.totalBookings;
+                document.getElementById("totalUsers").textContent = data.totalUsers;
+                document.getElementById("totalRecipes").textContent = data.totalRecipes;
+                document.getElementById("totalContacts").textContent = data.totalContacts;
+            } catch (error) {
+                console.error("Error loading stats:", error);
+            }
+        }
+        // Load when page opens
+        loadDashboardStats();
+        //for cheif
+         const apiUrl = "http://localhost:8080/api/chefs";
+            const chefTableBody = document.getElementById('chefTableBody');
+            const addChefForm = document.getElementById('addChefForm');
+
+            // 🟢 Load existing chefs on page load
+                async function loadChefs() {
+                    chefTableBody.innerHTML = "";
+                    const res = await fetch(apiUrl);
+                    const chefs = await res.json();
+
+                    // Disable Add Chef button if 4 already exist
+                    const addBtn = addChefForm.querySelector("button");
+                    if (chefs.length >= 4) {
+                        addBtn.disabled = true;
+                        addBtn.textContent = "Max 4 Chefs Reached";
+                    } else {
+                        addBtn.disabled = false;
+                        addBtn.textContent = "Add Chef";
+                    }
+
+                    chefs.forEach(chef => appendChefRow(chef));
+                }
+
+                // single chef row
+                function appendChefRow(chef) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+      <td><img src="${chef.image}" width="80" /></td>
+      <td><input type="text" value="${chef.name}" id="name-${chef._id}" /></td>
+      <td><textarea id="desc-${chef._id}">${chef.description}</textarea></td>
+      <td>
+        <button onclick="deleteChef('${chef._id}')">Delete</button>
+      </td>
+    `;
+                    chefTableBody.appendChild(tr);
+                }
+           addChefForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData();
+                formData.append('name', document.getElementById('chefName').value);
+                formData.append('description', document.getElementById('chefDesc').value);
+                formData.append('image', document.getElementById('chefImage').files[0]);
+
+                const res = await fetch(apiUrl, { method: 'POST', body: formData });
+                const newChef = await res.json();
+
+                if (!res.ok) {
+                    alert("Error: " + (newChef.message || res.statusText));
+                    return;
+                }
+
+                // Instead of reloading everything, just append the new row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+    <td><img src="${newChef.image}" width="80" /></td>
+    <td><input type="text" value="${newChef.name}" id="name-${newChef._id}" /></td>
+    <td><textarea  id="desc-${newChef._id}">${newChef.description}</textarea></td>
+    <td>
+      <button class="delete-btn" onclick="deleteChef('${newChef._id}')">Delete</button>
+    </td>
+  `;
+                chefTableBody.appendChild(tr);
+
+                addChefForm.reset();
+            });
+            async function deleteChef(id) {
+                    if (!confirm("Delete this chef?")) return;
+
+                    const res = await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+                    if (!res.ok) {
+                        const err = await res.json();
+                        alert("Delete failed: " + (err.message || res.statusText));
+                        return;
+                    }
+                    // remove row from table
+                    document.getElementById(`row-${id}`)?.remove();}
+                
+    loadChefs();
+    //for gallery
+    const API_URL = "http://localhost:8080/api/gallery";
+        const adminGallery = document.getElementById("adminGallery");
+
+        // 🟢 Load gallery images in admin panel
+        async function loadAdminGallery() {
+            try {
+                const res = await fetch(API_URL);
+                const images = await res.json();
+
+                adminGallery.innerHTML = "";
+
+                images.forEach(image => {
+                    const wrapper = document.createElement("div");
+                    wrapper.style.display = "inline-block";
+                    wrapper.style.margin = "10px";
+                    wrapper.style.textAlign = "center";
+
+                    const imgEl = document.createElement("img");
+                   // imgEl.src = `http://localhost:8080/uploads/${image.img}`;
+                    imgEl.src = `http://localhost:8080/${image.img}`;
+                    imgEl.alt = "Gallery Image";
+                    imgEl.width = 120;
+
+                    const delBtn = document.createElement("button");
+                    delBtn.innerText = "Delete";
+                    delBtn.style.display = "block";
+                    delBtn.style.marginTop = "5px";
+                    delBtn.onclick = () => deleteImage(image._id);
+
+                    wrapper.appendChild(imgEl);
+                    wrapper.appendChild(delBtn);
+                    adminGallery.appendChild(wrapper);
+                });
+            } catch (err) {
+                console.error("Error loading gallery:", err);
+            }
+        }
+    const uploadForm = document.getElementById("uploadGalleryForm");
+
+    uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const fileInput = document.getElementById("galleryImage");
+        if (!fileInput.files.length) {
+            alert("Please select an image first!");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("image", fileInput.files[0]); // 🔑 must match backend `upload.single("image")`
+
+        try {
+            const res = await fetch(API_URL, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                alert("Upload failed: " + (data.error || res.statusText));
+                return;
+            }
+
+            alert("Image uploaded successfully!");
+            fileInput.value = ""; // clear input
+            loadAdminGallery(); // refresh gallery
+        } catch (err) {
+            console.error("Upload error:", err);
+            alert("Error uploading image");
+        }
+    });
+        //  Delete image
+        async function deleteImage(id) {
+            if (!confirm("Are you sure you want to delete this image?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/${id}`, {
+                    method: "DELETE"
+                });
+
+                const data = await res.json();
+                alert(data.message);
+
+                loadAdminGallery(); // refresh list
+            } catch (err) {
+                console.error("Delete error:", err);
+            }
+        }
+
+        loadAdminGallery();
+
+</script>
+<script src="../script/admin.js"></script>
+</body>
+</html>
